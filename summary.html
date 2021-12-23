@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel = "stylesheet" href="project_style.css">
+<title>Summary</title>
+
+<body>
+<script src="main.js"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+
+
+
+<script>
+
+ d3.select("body").append("h1").attr("class","visTitle")
+    .text("Summary")
+    .attr("align","center")
+
+d3.select("body").append("h2").attr("class", "visSubtitle")
+    .text("Challenges")
+d3.select("body").append("p").attr("class","visCont")
+    .text("Throughout the development of this project we ran into several challenges. One of the primary challenges we faced was related to how data was organized. For several visualizations, we resorted to hand manipulating data in excel files in order to achieve the data structure we needed to generate a visualization. The time devoted to this manipulation was highest for the Marimekko chart and the choropleth map. Another challenge we faced was accessing data from the Census Bureau. For several of our visualizations we made attempts to use Census data but struggled to access the information we were looking for via the Census Bureau website which often looped back to expired web pages.") 
+    
+    
+d3.select("body").append("h2").attr("class", "visSubtitle")
+    .text("Limitations")
+
+d3.select("body").append("p").attr("class","visCont")
+    .text("The primary limitation faced during the development of the project was access to data. In particular, we would have liked to have studied trends over a greater number of years but could not find much data before 2000. There were several times when we thought of a visualization topic which would have added to the exploration of our topic but were unable to find data to generate that visualization.")
+
+d3.select("body").append("h2").attr("class", "visSubtitle")
+    .text("Conclusion")
+d3.select("body").append("p").attr("class","visCont")
+    .text("From our work and exploration into the topic of displacement in Davidson we conclude that there are not strong trends of displacement in the area. That being said, we do identify some weak trends that should peak the interest of those who want to ensure that displacement is not an issue in Davidson in the future. For future work, we would encourage the continued search for more historical data and the use of data that will be collected over future years. We believe that the more years that these trends can be studied over the more significant the findings will be. ")
+
+
+
+</script>

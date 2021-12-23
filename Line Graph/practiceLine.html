@@ -1,0 +1,260 @@
+<body>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <link rel = "stylesheet" href="../project_style.css">
+  <script>
+  
+    var color = d3.scaleOrdinal(d3.schemeCategory10);
+    
+    var margin = {top: 80, right: 350, bottom: 15, left: 80},
+      width = 1500 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+      padding = 20;
+      // append the svg object to the body of the page
+      // append a 'group' element to 'svg'
+      // moves the 'group' element to the top left margin
+      svgContainer=d3.select("body").append("div").attr("graphs-container")
+      var svg1 = d3.select("div").append("svg")
+        .attr("width", width + margin.left + margin.right+padding)
+        .attr("height", height + margin.top + margin.bottom+padding)
+        .attr("id", "chart1")
+        .style("position", "relative")
+        .attr("viewbox", "0 0 100 100")
+        .attr("preserveAspectRatio","xMidYMid meet")
+        .append("g")
+        .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+
+
+   
+
+  //d3.timeParse
+    var parseTime = d3.timeParse("%Y");
+    var x = d3.scaleTime().range([0, width])
+        y = d3.scaleLinear().range([height, 0]),
+        z = d3.scaleOrdinal()
+             .range(['#993300','#0000cc','#006600','#ff6600', '#3399ff', '#33cc33']);
+
+    var line = d3.line()
+      .curve(d3.curveBasis)
+      .x(d => x(d.year))
+      .y(d => {
+        // console.log(d.share)
+        return y(d.share);
+      })
+
+  // gridlines in y axis function
+    function make_y_gridlines() {
+      return d3.axisLeft(y)
+        .ticks(10)
+    }
+
+
+  //Davidson Graph
+    data = d3.csv("Dav_Household_Income.csv").then(data => {
+      console.log(data[85])
+      //shares at [i,j] will represent the share of bucket i in year 2013+j
+      var shares = [[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
+      data.forEach(d => {
+        //TODO
+        d.year = parseTime(d.Year)
+        d.idIncBuckets = +d["ID Household Income Bucket"]
+        d.households = +d["Household Income"]
+        d.share = +d.share
+        d.y = +d.Year
+        d.geog=d["Geography"]
+        if (d.geog=="Davidson, NC"){
+            if (d.idIncBuckets <= 4 ) {
+              d.idIncBuckets = 0
+              d.buckets = "<$29,999 Davidson"
+              shares[d.idIncBuckets][d.y-2013] += d.share
+            }
+            else if (d.idIncBuckets <=  9) {
+              d.idIncBuckets = 1
+              d.buckets = "$30,000-$59,999 Davidson"
+              shares[d.idIncBuckets][d.y-2013] += d.share}
+            else {
+              d.idIncBuckets = 2
+              d.buckets = ">$60,000 Davidson"
+              shares[d.idIncBuckets][d.y-2013] += d.share
+            }
+        }else{
+            if (d.idIncBuckets <= 4 ) {
+              d.idIncBuckets = 3
+              d.buckets = "<$29,999 Mecklenburg"
+              shares[d.idIncBuckets][d.y-2013] += d.share
+            }
+            else if (d.idIncBuckets <=  9) {
+              d.idIncBuckets = 4
+              d.buckets = "$30,000-$59,999 Mecklenburg"
+              shares[d.idIncBuckets][d.y-2013] += d.share}
+            else {
+              d.idIncBuckets = 5
+              d.buckets = ">$60,000 Mecklenburg"
+              shares[d.idIncBuckets][d.y-2013] += d.share
+            }
+        }
+        
+      });
+
+      //ideally we wouldn't have to go through all the data a second time, but this
+      //forEach goes through and updates the share value so they're equal for
+      //each bucket/year combination, that way we don't have the weird vertical
+      //line in each line at each year
+      data.forEach(d => {
+        d.share = shares[d.idIncBuckets][d.y-2013]
+      });
+      console.log(shares)
+      var buckets = d3.nest()
+          .key(d=>d.buckets)
+          .entries(data);
+
+      console.log(buckets)
+      x.domain(d3.extent(data, d => d.year));
+      y.domain([0,d3.max(buckets, c => d3.max(c.values, d => d.share))]);
+      z.domain(buckets.map(c =>  c.key));
+      
+
+      //adding graph title
+      svg1.append("text")
+        .attr("x", (width / 2))
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("text-decoration", "underline")
+        .style("fill","#202742")
+        .text("Distribution of Household Income Over Time in Davidson");
+
+
+      //adding x-axis and title
+      svg1.append("g")
+          .attr("class", "axis axis--x")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .append("text")
+              .attr("x", 0.5*width-140)
+              .attr("dx", "0.71em")
+              .attr("fill", "#202742")
+              .text("Year")
+                .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+                .attr("transform", "translate(100,30)")  // centre below axis
+                .style("font-size", 12);
+
+      //adding y-axis and title
+      svg1.append("g")
+        .attr("class", "axis axis--y")
+        .call(d3.axisLeft(y))
+        .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0.45*height)
+            .attr("dy", "0.71em")
+            .attr("fill", "#000")
+            .text("Share of Households (%)")
+              .attr("text-anchor", "middle")
+              .attr("transform", "translate("+(-.45*((width)/2)) +","+(height*0.5)+")rotate(-90)")
+              .style("font-size", 12)
+              .style("fill", "#202742");
+      // add the Y gridlines
+      svg1.append("g")
+        .attr("class", "grid")
+        .style("stroke-opacity","0.4")
+        .call(make_y_gridlines()
+          .tickSize(-width)
+          .tickFormat("")
+      )
+
+
+        var bucket = svg1.selectAll(".bucket")
+          .data(buckets)
+          .enter().append("g")
+          .attr("class", "bucket").style("fill", "none");
+
+        paths = bucket.append("path")
+          .attr("class", "lines")
+          .attr("d", d => line(d.values))
+          .attr("class", function(d){
+             console.log("color-"+z(d.key).substring(1))
+             return "color-"+z(d.key).substring(1);
+          })
+          .style("stroke-width", 2)
+          .style("stroke", d =>  z(d.key))
+          .on("mouseover", function(d){
+                d3.select(this).style("stroke-width",4);
+          }) //Add listener for the mouseover event
+          .on("mouseout", function(d){
+              d3.select(this).style("stroke-width",2);
+          });   //Add listener for the mouseout event;
+          
+          
+        legendBox = 250;
+        legendContainer=svg1.append("svg").attr("class","legend-container")
+        var legend = legendContainer.selectAll(".legend")
+            .data(buckets)
+                .enter().append("g")
+                .attr("transform", (d,i) => 
+                    "translate (0," + i * 20 + ")")
+             
+        
+        // draw a rect for each color
+        legend.append("rect")
+            .attr("x", width+10)
+            .attr("y", margin.top)
+            .attr("rx", 5)
+            .attr("id", "not-clicked")
+            .attr("overflow", "visible")
+            .attr("width", legendBox)
+            .attr("height", 20)
+            // .attr("class", function(d) {
+            //     return ("box-"+z(d.key))})
+            .style ("fill", function(d) {
+                return (z(d.key))})
+            .on("click", function(d){
+                if (this.id=="not-clicked"){
+                    d3.select(".color-" + z(d.key).substring(1)).style("stroke-width", 4);
+                    d3.select(this).attr("id", "clicked")
+                }else{
+                    d3.select(".color-" + z(d.key).substring(1)).style("stroke-width", 2);
+                    d3.select(this).attr("id", "not-clicked");
+                }
+            });
+    
+        //add legend text
+        legend.append("text")
+              .attr("x", width+10+ legendBox/2)
+              .attr("y", margin.top + 9)
+              .attr("dy", ".35em")
+              .attr("overflow", "visible")
+              .attr("text-anchor", "middle")
+              .style("pointer-events", "none")
+              .style ("fill", "#ffffff")
+              .text (d => d.key);
+    
+    
+      //Appends a circle for each datapoint
+    //   svg1.selectAll(".dot")
+    //       .data(data)
+    //     .enter().append("circle") // Uses the enter().append() method
+    //       .attr("class", "dot") // Assign a class for styling
+    //       .attr("cx", function(d, i) { return x(d.year) })
+    //       .attr("cy", function(d) { return y(d.share) })
+    //       .attr("r", 2)
+    //       .style("fill", "#202742");
+
+  });
+
+
+  
+  
+  
+  
+//   d3.select("body").append("h3")
+//       .text("Sources")
+//   d3.select("body").append("ul")
+//       .append("li").attr("class", "sources")
+//         .text("Davidson Data: https://datausa.io/profile/geo/davidson-nc")
+//       .append("li").attr("class", "sources")
+//         .text("Mecklenburg Data: https://datausa.io/profile/geo/mecklenburg-county-nc")
+//       .append("li").attr("class", "sources")
+//         .text("Urban Displacement Project: https://www.urbandisplacement.org/")
+
+</script>

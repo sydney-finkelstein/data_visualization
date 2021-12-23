@@ -1,0 +1,179 @@
+{
+    "races": "all",
+    "children": [
+        {
+        "year": 2013,
+        "children": [
+         {
+            "race": "Other",
+            "children": [
+                {
+                    "value": 1184,
+                    "pov": 1    
+                },
+                {
+                    "value": 2304,
+                    "pov": 0  
+                }
+                ]
+          },
+          
+          {
+            "race": "Two or More",
+            "children": [
+                {
+                    "value": 5182,
+                    "pov": 1    
+                },
+                {
+                    "value": 20116,
+                    "pov": 0  
+                }
+            ]
+           
+          },
+         
+          {
+            "race": "Asian",
+            "children": [
+                {
+                    "value": 6645,
+                    "pov": 1    
+                },
+                {
+                    "value": 60687,
+                    "pov": 0  
+                }
+            ]
+          },
+          
+          {
+            "race": "Hispanic",
+            "children": [
+                {
+                    "value": 33228,
+                    "pov": 1    
+                },
+                {
+                    "value": 91572,
+                    "pov": 0  
+                }
+            ]
+          },
+          {
+            "race": "Black",
+            "children": [
+                {
+                    "value": 66390,
+                    "pov": 1    
+                },
+                {
+                    "value": 274673,
+                    "pov": 0  
+                }
+            ]
+          },
+          {
+            "race": "White",
+            "children": [
+                {
+                    "value": 53345,
+                    "pov": 1    
+                },
+                {
+                    "value": 433878,
+                    "pov": 0  
+                }
+            ]
+          }
+        ]
+    },
+    {
+    "year": 2014,
+    "children": [
+        {
+            "race": "Other",
+            "children": [
+                {
+                    "value": 1055,
+                    "pov": 1    
+                },
+                {
+                    "value": 1814,
+                    "pov": 0  
+                }
+            ]
+        },
+          {
+            "race": "Two or More",
+            "children": [
+                {
+                    "value": 4780,
+                    "pov": 1    
+                },
+                {
+                    "value": 24058,
+                    "pov": 0  
+                }
+            ]
+           
+          },
+         
+          {
+            "race": "Asian",
+            "children": [
+                {
+                    "value": 6976,
+                    "pov": 1    
+                },
+                {
+                    "value": 54644,
+                    "pov": 0  
+                }
+            ]
+          },
+          
+          {
+            "race": "Hispanic",
+            "children": [
+                {
+                    "value": 34228,
+                    "pov": 1    
+                },
+                {
+                    "value": 94245,
+                    "pov": 0  
+                }
+            ]
+          },
+          {
+            "race": "Black",
+            "children": [
+                {
+                    "value": 66390,
+                    "pov": 1    
+                },
+                {
+                    "value": 274673,
+                    "pov": 0  
+                }
+            ]
+          },
+          {
+            "race": "White",
+            "children": [
+                {
+                    "value": 53345,
+                    "pov": 1    
+                },
+                {
+                    "value": 433878,
+                    "pov": 0  
+                }
+            ]
+          }
+        ]
+    }
+]
+}
+  

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+  <title>Demographics</title>
+</head>
+<body>
+  <link rel = "stylesheet" href="../project_style.css">
+  <header>
+      <div class="container">
+        <nav>
+          <div class="nav-brand"></div>
+          <div class="burger-menu-icon">
+            <div class="line1"></div>
+            <div class="menu">Menu</div>
+            <div class="line3"></div>
+          </div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Bar%20Chart/barchart.html" class="nav-link">2. Property Value & Income</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Line%20Graph/project_time_series.html" class="nav-link">3. Wealth Distribution</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/radar/davidson-gentrification/radar.html" class="nav-link">4. Education Patterns</a>
+            </li> 
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/Choropleth/davidson-gentrification/choropleth2.html" class="nav-link">5. Map of Income Change</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Multivariate/marimekko.html" class="nav-link">6. Poverty & Migration</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+    <script src="../main.js"></script>
+  <h1 class="visTitle">1. Examining Changes in Davidson Population</h1>
+  <h3 class="visSubtitle">Question</h3>
+  <p class="visCont">With this first visualization, we strive to answer the question: how have the demographics of Davidson's population changed over the past decade? We asked this question in the hopes that its answer can shed light on what populations may have experienced displacement from Davidson in the past decade.</p>
+  <h3 class="visSubtitle">Data</h3>
+  <p class="visCont">The visualization below describes changes in the Davidson population across a variety of demographics between 2010-2014 estimates and 2015-2019 estimates. These estimates were taken from the Census Bureau's American Community Survey (ACS) 5-year estimates. These ACS datasets include percentages of the population fitting into different categories. We  subtracted the difference between the 2015-2019 estimates and the 2010-2014 estimates in order to find the change in percent between these two datasets.
+  </p>
+  <p class="visCont">Below, we plotted the changes in percentage of the population in four categories: Migration, Education, Race, and Housing. The migration category describes changes in the percents of the Davidson population migrating to Davidson. More specifically, these categories represent changes in where the Davidson population lived a year prior to filling out the ACS. Second, the education category describes changes in the highest education earned by residents. Third, the race category describes changes in the racial identification of Davidson residents. Lastly, the housing category indicates the change in the percent of the Davidson population renting, owning with mortgage, or owning without mortgage. 
+ </p>
+  <div class="diverge-container"></div>
+  <script>
+		var margin = {top: 40, right: 100, bottom: 60, left: 200};
+    
+    var width = 1050 - margin.left - margin.right,
+    		height = 500 - margin.top - margin.bottom;
+    
+    var svg = d3.select(".diverge-container").append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+    
+    // Config
+    var cfg = {
+      labelMargin: 5,
+      xAxisMargin: 10,
+    }
+    
+    var x = d3.scaleLinear()
+    	.range([0, width-20]);
+    
+    // color palette = one color per subgroup 
+    var color = d3.scaleOrdinal()
+     .range(['#E76F51','#264653','#F4A261','#2A9D8F'])
+    var y = d3.scaleBand()
+     .range([height, 0])
+     .padding(0.1);
+    
+    function parse(d) {
+      d.group = d['Group'];
+      d.value = +d['Value'];
+      d.label = d['Label'];
+      return d;
+    }
+    
+    d3.csv("diverge.csv", parse, function(error, data) {
+      if (error) throw error;
+      subgroups=d3.map(data, function(d){return(d.group)}).keys()
+      color.domain(subgroups)
+      y.domain(data.map(function(d) { return d.label; }));
+      x.domain(d3.extent(data, function(d) { return d.value; }));
+      var max = d3.max(data, function(d) { return d.value; });
+    //   color.domain([-max, max]);
+      
+      var yAxis = svg.append("g")
+      	.attr("class", "y-axis")
+      	.attr("transform", "translate(" + x(0) + ",0)")
+      	.append("line")
+          .attr("y1", 0)
+          .attr("y2", height);
+      
+      var xAxis = svg.append("g")
+      	.attr("class", "x-axis")
+      	.attr("transform", "translate(0," + (height + cfg.xAxisMargin) + ")")
+      	.call(d3.axisBottom(x).tickSizeOuter(0))
+      	.append("text")
+                    .attr("x", 0.5*width)
+                    .attr("dx", "0.71em")
+                    .attr("fill", "#202742")
+                    .text("Change in Percentage of Davidson Population")
+                        .attr("text-anchor", "middle")
+                        .attr("transform", "translate(0,"+(38)+")")  // center below axis
+                        .attr("class","axis-title");
+        //adding graph title
+      svg.append("text")
+        .attr("x", (width / 2))
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .attr("class", "graph-title")
+        .style("text-decoration", "underline")
+        .style("fill","#202742")
+        .text("Changes in Davidson Population Demographics from 2010-14 Estimates and 2015-19 estimates");
+
+      
+      var bars = svg.append("g")
+      	.attr("class", "bars")
+      
+      bars.selectAll("rect")
+      	.data(data)
+      .enter().append("rect")
+      	.attr("class", "annual-growth")
+      	.attr("x", function(d) {
+       		return x(Math.min(0, d.value));
+      	})
+      	.attr("y", function(d) { return y(d.label); })
+      	.attr("height", y.bandwidth())
+      	.attr("width", function(d) { 
+        	return Math.abs(x(d.value) - x(0))
+      	})
+      	.style("fill", function(d) {
+        	return color(d.group)
+      	});
+      
+      var labels = svg.append("g")
+      	.attr("class", "labels");
+      
+      labels.selectAll("text")
+      	.data(data)
+      .enter().append("text")
+      	.attr("class", "bar-label")
+      	.attr("x", function(d){
+      	    if (d.value<0){
+      	       return -30+x(d.value) + Math.sign(d.value) * 4
+      	    }else{
+      	        return 30+x(d.value) + Math.sign(d.value) * 4
+      	    }
+      	})
+       	.attr("y", function(d) { return y(d.label)-5})
+      	.attr("dx", function(d) {
+        	return d.value < 0 ? cfg.labelMargin : -cfg.labelMargin;
+      	})
+      	.attr("dy", y.bandwidth())
+      	.attr("text-anchor", function(d) {
+        	return d.value < 0 ? "start" : "end";
+      	})
+      	.text(function(d) { return d.label+", "+d.value+"%" }).style("font-size",12)
+
+      	svg.selectAll(".bar-label")
+         // .style("display", "block")
+          .attr("transform", function(d) {
+            var len = this.getComputedTextLength();
+            if (d.value<0){
+      	       return "translate("+(-1*len+25)+",0)";
+      	    }else{
+      	        return "translate("+(len-25)+",0)";
+      	    }
+         });
+         
+         
+         var legendBox = 120;
+            
+            var legend = svg.selectAll(".legend")
+              .data(subgroups)
+                .enter().append("g")
+                .attr("class", "legend")
+                .attr("transform", (d,i) => 
+                    "translate (-140," + i * 20 + ")")
+             
+            // draw a rect for each county color
+            legend.append("rect")
+                .attr("x", width + 70)
+                .attr ("y", margin.top)
+                .attr ("rx", 5)
+                .attr ("width", legendBox)
+                .attr("height", 20)
+                .style ("fill", function(d){
+                    return color(d)});
+              
+            //add legend text
+            legend.append("text")
+              .attr("x", width + 70 + legendBox/2)
+              .attr ("y", margin.top + 9)
+              .attr ("dy", ".35em")
+              .attr("text-anchor", "middle")
+              .style("pointer-events", "none")
+              .style ("fill", "#ffffff")
+              .text(function(d){
+                  return d})
+                  
+     
+        });
+  </script>
+  <h3 class="visSubtitle">Analysis</h3>
+  <p class="visCont">In looking at this chart, we see that the most dramatic changes that have taken place include: the percent of the renting population increased by 15%; the population that is white is the only race that has substantially increased while most other races have decreased; and the percent of the population earning a bachelor's degree has increased substantially. Altogether, we see that some changes suggest that displacement has taken place, while others suggest that no displacement has taken place. For example, this increase in the white population would suggest displacement, while the decrease in home owners without mortgage would suggest that displacement has not taken place. While this graph is helpful in showing these changes, we were left to wonder what changes in income could suggest. Head to our visualization about <a href="https://csc362project.officetutoringhwhelp.com/Bar%20Chart/barchart.html">
+    <i class="next-link">Income and Property Value Changes in Davidson and Mecklenburg County</i></a> to learn more.</p>
+</body>

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+		<link rel = "stylesheet" href="../project_style.css">
+		<title>Radar Chart</title>
+
+		<!-- Google fonts -->
+		<link href='https://fonts.googleapis.com/css?family=Open+Sans:400,300' rel='stylesheet' type='text/css'>
+		<link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
+
+		<!-- D3.js -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js" charset="utf-8"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/1.3.0/d3-legend.js" charset="utf-8"></script>
+
+		
+	
+	</head>
+	<body>
+		<header>
+			<div class="container">
+			  <nav>
+				<div class="nav-brand"></div>
+				<div class="burger-menu-icon">
+				  <div class="line1"></div>
+				  <div class="menu">Menu</div>
+				  <div class="line3"></div>
+				</div>
+				 <ul class="nav-list">
+                     <li class="nav-item">
+                      <a href="https://csc362project.officetutoringhwhelp.com/" class="nav-link">Home</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="https://csc362project.officetutoringhwhelp.com/Diverging%20Bar/diverge.html" class="nav-link">Demographic Changes</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="https://csc362project.officetutoringhwhelp.com/Bar%20Chart/barchart.html" class="nav-link">Property Value & Income</a>
+                    </li>
+                    <li class="nav-item">
+                      <a href="https://csc362project.officetutoringhwhelp.com/Line%20Graph/project_time_series.html" class="nav-link">Wealth Distribution</a>
+                    </li>
+                    <li class="nav-item">
+                              <a href="https://csc362project.officetutoringhwhelp.com/Choropleth/choropleth2.html" class="nav-link">Map of Income Change</a>
+                    </li> 
+                    <li class="nav-item">
+                      <a href="https://csc362project.officetutoringhwhelp.com/Multivariate/marimekko.html" class="nav-link">Poverty and Migration</a>
+                    </li>
+                  
+                  </ul>
+			  </nav>
+			</div>
+		  </header>
+        <script>		
+			d3.select("body").append("h1").attr("class","visTitle")
+				.text("Increasing Poverty Affects Decisions to Stay in Mecklenburg County")
+			    .attr("align","center")
+            d3.select("body").append("h3").attr("class","visSubtitle")
+                .text("Question")
+			d3.select("body").append("p").attr("class","visCont")
+   				 .text("The visualization below aims to answer the question : how has education level changed in Mecklenburg County over time. Education is a variable of a community's makeup whose change can be a strong indicator of displacement. Typically if displacement is taking place in a community then we would expect to  see a rise in over education level of community members over time. In order to give more context we look at not only Mecklenburg County but also the state of North Carolina and the metro area surrounding Mecklenburg County.")
+			d3.select("body").append("h3").attr("class","visSubtitle")
+                .text("Data")
+			d3.select("body").append("p").attr("class","visCont")
+   				 .text("The data for this visualization came")
+		</script>
+		<script src="../main.js"></script>
+        <div class="radar-container" >
+            <select id="radarSelectButton"></select>
+    		<div class="radarChart" style="float: center;"></div>
+        </div>
+
+		<script>
+			// Set-up
+            
+			var margin = {top: 120, right: 100, bottom: 100, left: 100},
+				legendPosition = {x: 440, y: 80},
+				width = Math.min(575, window.innerWidth - 10) - margin.left - margin.right,
+				height = Math.min(width, window.innerHeight - margin.top - margin.bottom - 20);
+           	var color = d3.scale.ordinal()
+				.range(["#EDC951","#CC333F","#00A0B0"]);
+		
+			var radarChartOptions = {
+			  w: width+50,
+			  h: height,
+			  margin: margin,
+			  legendPosition: legendPosition,
+			  maxValue: 0.30,
+			  wrapWidth: 60,
+			  levels: 3,
+			  roundStrokes: true,
+			  color: color,
+			  axisName: "ed_level",
+			  areaName: "geo_area",
+			  value: "value",
+			};
+			var cfg = {
+            	 w: 650,				//Width of the circle
+            	 h: 650,				//Height of the circle
+            	 margin: {top: 30, right: 20, bottom: 20, left: 20}, //The margins around the circle
+            	 legendPosition: {x: 20, y: 20}, // the position of the legend, from the top-left corner of the svg
+            	 levels: 3,				//How many levels or inner circles should there be drawn
+            	 maxValue: 0, 				//What is the value that the biggest circle will represent
+            	 labelFactor: 1.25, 			//How much farther than the radius of the outer circle should the labels be placed
+            	 wrapWidth: 60, 			//The number of pixels after which a label needs to be given a new line
+            	 opacityArea: 0.35, 			//The opacity of the area of the blob
+            	 dotRadius: 4, 				//The size of the colored circles of each blog
+            	 opacityCircles: 0.1, 			//The opacity of the circles of each blob
+            	 strokeWidth: 2, 			//The width of the stroke around each blob
+                 roundStrokes: false,			//If true the area and stroke will follow a round path (cardinal-closed)
+            	 color: d3.scale.category10(),		//Color function
+            	 axisName: "axis",
+            	 areaName:"areaName",
+            	 value: "value",
+             	 sortAreas: true,
+            };
+           
+			
+			// Draw chart
+		
+			 var  g, svg, radius, total, allAxis, rScale, axisName, value, maxValue, axisGrid, radius
+            Format = d3.format('%')
+        	//Initiate the radar chart SVG
+        	 svg = d3.select(".radarChart").append("svg")
+        			.attr("width",  cfg.w + cfg.margin.left + cfg.margin.right+250)
+        			.attr("height", cfg.h + cfg.margin.top + cfg.margin.bottom)
+        			.attr("class", "radarChart");
+        	//Append a g element		
+        	 g = svg.append("g")
+        			.attr("transform", "translate(" + (cfg.w/2 + cfg.margin.left) + "," + (cfg.h/2 + cfg.margin.top) + ")");
+        	
+        	//Filter for the outside glow
+        	var filter = g.append('defs').append('filter').attr('id','glow'),
+        		feGaussianBlur = filter.append('feGaussianBlur').attr('stdDeviation','2.5').attr('result','coloredBlur'),
+        		feMerge = filter.append('feMerge'),
+        		feMergeNode_1 = feMerge.append('feMergeNode').attr('in','coloredBlur'),
+        		feMergeNode_2 = feMerge.append('feMergeNode').attr('in','SourceGraphic');
+            
+        	
+            
+
+			//Load the data and Call functions to draw the Radar chart
+			d3.json("2019_data.json", function(error, data){
+			    setChart(data)
+				RadarChart(data, 2019);
+			});
+
+        // Code based on code written by Nadieh Bremer on VisualCinnamon.com 
+        //Put all of the options into a variable called cfg
+	    
+        function setChart(data) {
+            if('undefined' !== typeof radarChartOptions){
+        	  for(var i in radarChartOptions){
+        		if('undefined' !== typeof radarChartOptions[i]){ cfg[i] = radarChartOptions[i]; }
+        	  }
+        	}
+            
+            //Map the fields specified in the configuration 
+        	// to the axis and value variables
+        	axisName = cfg["axisName"],
+			areaName = cfg["areaName"],
+			value = cfg["value"];
+			
+			
+			
+            radius = Math.min(cfg.w/2, cfg.h/2) 			//Radius of the outermost circle
+
+            //Wrapper for the grid & axes
+            axisGrid = g.append("g").attr("class", "axisWrapper");
+
+             //Draw the background circles
+        	axisGrid.selectAll(".levels")
+        	   .data(d3.range(1,(cfg.levels+1)).reverse())
+        	   .enter()
+        		.append("circle")
+        		.attr("class", "gridCircle")
+        		.attr("r", function(d, i){console.log(radius)
+        		return radius/cfg.levels*d;})
+        		.style("fill", "#CDCDCD")
+        		.style("stroke", "#CDCDCD")
+        		.style("fill-opacity", cfg.opacityCircles)
+        		.style("filter" , "url(#glow)");
+            
+        	//Text indicating at what % each level is
+        	axisGrid.selectAll(".axisLabel")
+        	   .data(d3.range(1,(cfg.levels+1)).reverse())
+        	   .enter().append("text")
+        	   .attr("class", "axisLabel")
+        	   .attr("x", 4)
+        	   .attr("y", function(d){return -d*radius/cfg.levels;})
+        	   .attr("dy", "0.4em")
+        	   .style("font-size", "10px")
+        	   .attr("fill", "#737373")
+        	   .text(function(d,i) { return Format(radarChartOptions.maxValue * d/cfg.levels); });
+        	
+        	//Map the fields specified in the configuration 
+        	// to the axis and value variables
+        	axisName = cfg["axisName"],
+        			areaName = cfg["areaName"],
+        			value = cfg["value"];
+        	//Convert the nested data passed in
+        	// into an array of values arrays
+        	data = data.map(function(d) { return d.values })
+            allAxis = (data[0].map(function(d, i){ return d[axisName] })),	//Names of each axis
+    		total = allAxis.length,					//The number of different axes
+    		angleSlice = Math.PI * 2 / total;			//The width in radians of each "slice"
+    			//Scale for the radius
+        	 rScale = d3.scale.linear()
+        		.range([0, radius])
+        		.domain([0, radarChartOptions.maxValue]);
+        
+        
+        	// Draw axes
+        	//Create the straight lines radiating outward from the center
+        	var axis = axisGrid.selectAll(".axis")
+        		.data(allAxis)
+        		.enter()
+        		.append("g")
+        		.attr("class", "axis");
+        	//Append the lines
+        	axis.append("line")
+        		.attr("x1", 0)
+        		.attr("y1", 0)
+        		.attr("x2", function(d, i){ 
+        		    return rScale(radarChartOptions.maxValue*1.1) * Math.cos(angleSlice*i - Math.PI/2); })
+        		.attr("y2", function(d, i){ return rScale(radarChartOptions.maxValue*1.1) * Math.sin(angleSlice*i - Math.PI/2); })
+        		.attr("class", "line")
+        		.style("stroke", "white")
+        		.style("stroke-width", "2px");
+        
+        	//Append the labels at each axis
+        	axis.append("text")
+        		.attr("class", "legend")
+        		.style("font-size", "9px")
+        		.attr("text-anchor", "middle")
+        		.attr("dy", "0.35em")
+        		.attr("x", function(d, i){ return rScale(radarChartOptions.maxValue * cfg.labelFactor) * Math.cos(angleSlice*i - Math.PI/2); })
+        		.attr("y", function(d, i){ return rScale(radarChartOptions.maxValue * cfg.labelFactor) * Math.sin(angleSlice*i - Math.PI/2); })
+        		.text(function(d){return d})
+        		.call(wrap, cfg.wrapWidth);
+		}
+			
+		//Taken from http://bl.ocks.org/mbostock/7555321
+        //Wraps SVG text	
+        function wrap(text, width) {
+        	  text.each(function() {
+        		var text = d3.select(this),
+        			words = text.text().split(/\s+/).reverse(),
+        			word,
+        			line = [],
+        			lineNumber = 0,
+        			lineHeight = 1.4, // ems
+        			y = text.attr("y"),
+        			x = text.attr("x"),
+        			dy = parseFloat(text.attr("dy")),
+        			tspan = text.text(null).append("tspan").attr("x", x).attr("y", y).attr("dy", dy + "em");
+        			
+        		while (word = words.pop()) {
+        		  line.push(word);
+        		  tspan.text(line.join(" "));
+        		  if (tspan.node().getComputedTextLength() > width) {
+        			line.pop();
+        			tspan.text(line.join(" "));
+        			line = [word];
+        			tspan = text.append("tspan").attr("x", x).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+        		  }
+        		}
+        	  });
+        }
+        function RadarChart(data, year) {
+        	id = ".radarChart"
+        	//Calculate the average value for each area
+        	data.forEach(function(d){
+        		d[value + "Average"] = d3.mean(d.values, function(e){ return e[value] }); 
+        	})
+            //Convert the nested data passed in
+        	// into an array of values arrays
+        	data = data.map(function(d) { return d.values })
+            
+            // //Append graph title
+            // g.append("text")
+            //     .attr("class", "graph-title").style("text-decoration", "underline")
+            //     .attr("dy", "-285px")
+            //     .attr("text-anchor", "middle")
+            //     .text(function(d){return year})
+            
+        	// Draw shapes
+        	//The radial line function
+        	const radarLine = d3.svg.line.radial()
+        		.interpolate("linear-closed")
+        		.radius(function(d) { return rScale(d[value]); })
+        		.angle(function(d,i) {	return i*angleSlice; });
+
+        	if(cfg.roundStrokes) {
+        	    console.log("here")
+        		radarLine.interpolate("cardinal-closed");
+        	}
+    	    //Create a wrapper for the blobs	
+        	var blobWrapper = g.selectAll(".radarWrapper")
+        		.data(data)
+        		.enter().append("g")
+        		.attr("class", "radarWrapper");
+        	//Append the backgrounds	
+        	blobWrapper
+        		.append("path")
+        		.attr("class", "areaName")
+                .attr("d", function(d,i) {
+                return radarLine(d);})
+                // color of blob set here
+        		.style("fill", function(d,i) { 
+        		  //  console.log (cfg.color(i)); 
+        		  return cfg.color(i); })
+        		.style("fill-opacity", cfg.opacityArea)
+        		.on('mouseover', function (d,i){
+         			console.log("d", d);
+        			//Dim all blobs
+        			d3.selectAll(".radarArea")
+        				.transition().duration(200)
+        				.style("fill-opacity", 0.1); 
+        			//Bring back the hovered over blob
+        			d3.select(this)
+        				.transition().duration(200)
+        				.style("fill-opacity", 0.7);	
+        		})
+        		.on('mouseout', function(d,i){
+        			//Bring back all blobs
+        			d3.selectAll(".areaName")
+        				.transition().duration(200)
+        				.style("fill-opacity", 0.1);
+        		});
+        		
+        	//Create the outlines	
+        	blobWrapper.append("path")
+        		.attr("class", "radarStroke")
+        		.attr("d", function(d,i) { console.log(radarLine)
+        		return radarLine(d); })
+        		.style("stroke-width", cfg.strokeWidth + "px")
+        		.style("stroke", function(d,i) { return cfg.color(i); })
+        		.style("fill", "none")
+        		.style("filter" , "url(#glow)");		
+        	
+        	//Append the circles
+        	blobWrapper.selectAll(".radarCircle")
+        		.data(function(d,i) { return d; })
+        		.enter().append("circle")
+        		.attr("class", "radarCircle")
+        		.attr("r", cfg.dotRadius)
+        		.attr("cx", function(d,i){ return rScale(d[value]) * Math.cos(angleSlice*i - Math.PI/2); })
+        		.attr("cy", function(d,i){ return rScale(d[value]) * Math.sin(angleSlice*i - Math.PI/2); })
+        		.style("fill", function(d,i,j) { return cfg.color(j); })
+        		.style("fill-opacity", 0.8);
+        
+        	
+        	//Wrapper for the invisible circles on top
+        	var blobCircleWrapper = g.selectAll(".radarCircleWrapper")
+        		.data(data)
+        		.enter().append("g")
+        		.attr("class", "radarCircleWrapper");
+        		
+        	//Append a set of invisible circles on top for the mouseover pop-up
+        	blobCircleWrapper.selectAll(".radarInvisibleCircle")
+        		.data(function(d,i) { return d; })
+        		.enter().append("circle")
+        		.attr("class", "radarInvisibleCircle")
+        		.attr("r", cfg.dotRadius*1.5)
+        		.attr("cx", function(d,i){ return rScale(d[value]) * Math.cos(angleSlice*i - Math.PI/2); })
+        		.attr("cy", function(d,i){ return rScale(d[value]) * Math.sin(angleSlice*i - Math.PI/2); })
+        		.style("fill", "none")
+        		.style("pointer-events", "all")
+        		.on("mouseover", function(d,i) {
+        			newX =  parseFloat(d3.select(this).attr('cx')) - 10;
+        			newY =  parseFloat(d3.select(this).attr('cy')) - 10;
+        			tooltip
+        				.attr('x', newX)
+        				.attr('y', newY)
+        				.text(Format(d[value]))
+        				.transition().duration(200)
+        				.style("z-index","9999")
+        				.style('opacity', '1');
+        		})
+        		.on("mouseout", function(){
+        			tooltip.transition().duration(200)
+        				.style("opacity", 0);
+        		});
+        		
+        		
+            //Set up the small tooltip for when you hover over a circle
+        	var tooltip = g.append("text")
+        		.attr("class", "tooltip")
+        		.style("z-index", "10")
+        		.style("opacity", 0);
+        	// on mouseover for the legend symbol
+        	function cellover(d) {
+        	    console.log(d)
+    			//Dim all blobs
+    			d3.selectAll(".radarArea")
+    				.transition().duration(200)
+    				.style("fill-opacity", 0.1); 
+    			//Bring back the hovered over blob
+    			d3.select("." + data[d][0][areaName].replace(/\s+/g, ''))
+    				.transition().duration(200)
+    				.style("fill-opacity", 0.7);	
+        	}
+        
+        	// on mouseout for the legend symbol
+        	function cellout(d) {
+        		//Bring back all blobs
+        		d3.selectAll(".radarArea")
+        			.transition().duration(200)
+        			.style("fill-opacity", cfg.opacityArea);
+        	}
+        
+        	// legend
+        	svg.append("g")
+          	.attr("class", "legendOrdinal")
+          	.attr("transform", "translate(" + cfg["legendPosition"]["x"] + "," + cfg["legendPosition"]["y"] + ")");
+            
+            var legendOrdinal = d3.legend.color()
+           
+          //d3 symbol creates a path-string
+          	.shape("path", d3.svg.symbol().type("circle").size(150)())
+          	.shapePadding(10)
+          	.scale(cfg.color)
+          	.labels(cfg.color.domain().map(function(d){
+                // this returns a year
+                console.log(data[d][0][areaName])
+                return data[d][0][areaName];
+          	}))
+          	.on("cellover", function(d){ cellover(d); })
+          	.on("cellout", function(d) { cellout(); });
+        
+        svg.select(".legendOrdinal")
+          .call(legendOrdinal);
+        }
+        
+    	
+        var choices = [2010, 2015];
+
+        function sequence(file, year) {
+            console.log(file)
+            console.log(year)
+            d3.selectAll(".radarWrapper").remove();
+            d3.selectAll(".graph-title").remove();
+            d3.json(file, function(error, data){
+			    RadarChart(data, year);
+		    })
+        
+		  }
+		    
+        // Handler for dropdown value change
+        var dropdownChange = function() {
+            currentYear = d3.select(this).property('value')
+            json = currentYear+"_data.json"
+            sequence(json, currentYear)
+        };
+        var dropdown = d3.select("select")
+            .on("change", dropdownChange);
+        
+        dropdown.selectAll("option")
+            .data(choices)
+            .enter().append("option")
+                .attr("value", function (d) { return d; })
+                .text(function (d) {
+                    return d;
+                });
+        
+        dropdown.append("option").attr("value", "2019").property("selected", "None").text("2019")
+    
+  </script>
+  <h3 class="visSubtitle">Analysis</h3>
+  <p class="visCont">From these visualizations we can see that there is no large shift in the education level in any of these geographic areas over the years. There are two subtle shifts which we can identify. Between 2015 there is a slight shift in Mecklenburg County as there is an increase in the percent of the population with Graduate or professional degrees and Bachelor's Degrees. Secondly, there is a decrease in the percentage of the population with high school degrees and some college exposure. These seem to be the only metrics  which shift noticeable and the rest stay steady for all years and regions. Because we did not find very noticeable differences between these larger regions, we look more closely at trends within Mecklenburg County. Head to our <a href="https://csc362project.officetutoringhwhelp.com/Choropleth/choropleth2.html"><i class="next-link"> Changes in Mecklenburg County Income Map</i></a> to learn more. </p>
+</body>
+</html>

@@ -1,0 +1,21 @@
+Label,Value,Group
+Same residence,-2.9,Migration
+Different residence but same county,0.7,Migration
+Different county but same state,0.4,Migration
+Different state,1.9,Migration
+Abroad,-0.2,Migration
+Less than high school,0.3,Education
+High school or equivalency,-4.8,Education
+Some college but no degree,-3.7,Education
+Associate's degree,0.3,Education
+Bachelor's degree,6.9,Education
+Graduate/Professional degree,1.1,Education
+White,5.9,Race
+Black,-4.5,Race
+Native American,-0.7,Race
+Asian,-0.7,Race
+Other,0.1,Race
+Two or more races,0.3,Race
+Owners with mortgage,-7.9,Housing
+Owners without mortgage,-4.1,Housing
+Renters,15.9,Housing

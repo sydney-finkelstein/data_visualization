@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<!--<!Starter code thanks to:-->
+<!--http://bl.ocks.org/micahstubbs/8e15870eb432a21f0bc4d3d527b2d14f>-->
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="../project_style.css" />
+<title>Map of Income</title>
+<body>
+    <header>
+      <div class="container">
+        <nav>
+          <div class="nav-brand"></div>
+          <div class="burger-menu-icon">
+            <div class="line1"></div>
+            <div class="menu">Menu</div>
+            <div class="line3"></div>
+          </div>
+          <ul class="nav-list">
+             <li class="nav-item">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/" class="nav-link">Home</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Diverging%20Bar/diverge.html" class="nav-link">1. Demographic Changes</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Bar%20Chart/barchart.html" class="nav-link">2. Property Value & Income</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Line%20Graph/project_time_series.html" class="nav-link">3. Wealth Distribution</a>
+            </li>
+            <li class="nav-item" style="list-style: none">
+                      <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/radar/radar.html" class="nav-link">4. Education Patterns</a>
+            </li> 
+            <li class="nav-item" style="list-style: none">
+              <a href="https://csc362project.officetutoringhwhelp.com/davidson-gentrification/Multivariate/marimekko.html" class="nav-link">6. Poverty and Migration</a>
+            </li>
+          
+          </ul>
+        </nav>
+      </div>
+    </header>
+    
+    <h1 class="visTitle">5. Mapping Household Income in Mecklenburg</h1>
+    <h3 class="visSubtitle">Question</h3>
+	<p class="visCont">After considering the change in income and property values over time in Mecklenburg County, a natural next question is: where specifically in the county are these changes occuring? </p>
+	<h3 class="visSubtitle">Data</h3>
+	<p class="visCont"> The visualization below helps to answer this question by identifying any geographic patterns in change income distribution throughout the county from 2013 through 2018. We downloaded this data from <a href="https://datausa.io/"><i class="next-link">Data USA</i></a>, which works with data from the U.S. census. More specifically, we downloaded the <a href=" https://datausa.io/profile/geo/mecklenburg-county-nc#income_geo"><i class="next-link">Mecklenburg County Income by Location data</i></a> for each year, and combined this data into one spreadsheet in order to create the visualization below. The map is interactive and can be played to show the change in household income over time in each of the census tracts in Mecklenburg County. The visualization can also be paused at any point on a year of particular interest.</p>
+	<div id="wrapper">	
+   	    <div id="map"></div>
+   	    <div id="button">
+   	        <button id="play">Play</button>
+            <span id="clock">2013</span>
+   	    </div>
+        <select id="selectButton"></select>
+        <span id="legend"></span>
+  </div>
+  <h3 class="visSubtitle">Analysis</h3>
+  <p class="visCont">  From this visualization we can confirm that over time, household income is rising in Mecklenburg county. This trend appears particularly clear in those census tracts further away from the center of the city, around the edge of the map. This begs the question, what are the demographics of the communities being affected by this trend? More specifically, are there populations who are being more heavily impacted by these shifts? We explore further in the next visualization about <a href="https://csc362project.officetutoringhwhelp.com/Multivariate/marimekko.html">
+    <i class="next-link">Migration Patterns.</i></a>.</p>
+
+
+<script src="../main.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/queue.v1.min.js"></script>
+<script src="https://d3js.org/topojson.v1.min.js"></script>
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+<script src="https://d3js.org/d3-interpolate.v1.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
+<script src = "https://d3js.org/d3-axis.v1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.25.6/d3-legend.min.js"></script>
+
+
+<script>
+var format = d3.format(",");
+// Set tooltips
+//two parameters: tract name and income
+    var years = [2013,2014,2015,2016,2017,2018], currentYear = 0, playing = false, svg, path;
+    var tip = d3.tip()
+        .attr('class', 'map-tip')
+        .offset([-10, 0])
+        .html(function(d) {
+            return "<strong>Tract: </strong><span class='details'>" +
+            d.properties["NAME20"] + "<br></span>" +
+            "<strong>Income: </strong><span class='details'>" +
+            format(d[years[currentYear].toString()]) +"</span>";
+        })
+
+    var margin = {top: 20, right: 0, bottom: 0, left: 0},
+            width = 600 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom
+    console.log(d3.schemeReds[9])
+            
+    //setting color scale
+    //linear blocks for colors
+    var colors = d3.scaleQuantize()
+        .range(['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000']);//color Brewer reds scales
+    var currentMax=0, currentMin=0;
+    
+    
+// START CODE FROM OBSERVABLE : http://bl.ocks.org/rgdonohue/9280446
+    function init() {
+      
+    
+      setMap();
+      //setLegend();
+
+        
+    }
+
+    function setLegend () {
+      var lowColor = '#fff7ec'
+      var highColor = '#b30000'
+
+      // add a legend
+      var w = 600, h = 600;
+
+      var key = d3.select(".map-container")
+      .append("svg")
+      .attr("width", w)
+      .attr("height", h)
+      .attr("class", "legend");
+
+      var legend = key.append("defs")
+      .append("svg:linearGradient")
+      .attr("id", "gradient")
+      .attr("x1", "100%")
+      .attr("y1", "0%")
+      .attr("x2", "100%")
+      .attr("y2", "100%")
+      .attr("spreadMethod", "pad");
+
+      legend.append("stop")
+      .attr("offset", "0%")
+      .attr("stop-color", highColor)
+      .attr("stop-opacity", 1);
+
+      legend.append("stop")
+      .attr("offset", "100%")
+      .attr("stop-color", lowColor)
+      .attr("stop-opacity", 1);
+
+      key.append("rect")
+      .attr("width", 50)
+      .attr("height", 200)
+      .style("fill", "url(#gradient)")
+      .attr("transform", "translate(350,45)");
+
+      var y = d3.scaleLinear()
+      .range([200, 0])
+      .domain([0, 249000]);
+
+      // var yAxis = d3.axisRight(y);
+
+      // key.append("g")
+      // .attr("class", "y axis")
+      // .attr("transform", "translate(405,45)")
+      // .call(yAxis);
+
+      key.append("line")
+        .attr("x1", 405)
+        .attr("x2", 405)
+        .attr("y1", 45)
+        .attr("y2", 245)
+        .attr("stroke", "black")
+
+
+      var top = key.append("line")
+        .attr("x1", 405)
+        .attr("x2", 425)
+        .attr("y1", 45)
+        .attr("y2", 45)
+        .attr("stroke", "black")
+
+      var bottom = key.append("line")
+        .attr("x1", 405)
+        .attr("x2", 425)
+        .attr("y1", 245)
+        .attr("y2", 245)
+        .attr("stroke", "black")
+      
+      key.append('text')
+             .attr('class', 'barsEndlineText')
+             .attr('text-anchor', 'middle')
+             .attr("x", 450)
+             .attr("y", 45)
+             .text('249,000')
+
+      key.append('text')
+             .attr('class', 'barsEndlineText')
+             .attr('text-anchor', 'middle')
+             .attr("x", 430)
+             .attr("y", 245)
+             .text('0')
+}
+ 
+   function setMap() { 
+       
+    //   // D3 Projection
+
+    svg = d3.select("#map")
+             .append("svg").attr('class','map-container')
+             .attr("width", width)
+             .attr("height", height)
+             .append('g')
+             .attr('class', 'map');
+    // setLegend();
+
+    // D3 Projection
+      var projection = d3.geoAlbersUsa()
+        .translate([-9800, -1700]) // translate to center of screen
+        .scale([44900]); // scale things down so see entire state
+      path = d3.geoPath().projection(projection);
+
+      //call the tool tip
+      svg.call(tip);
+      loadData();
+      setLegend();
+      
+   }
+  
+    function loadData(){
+      //set up to call multiple files
+      queue()
+          .defer(d3.json, "lastTracts.json")//data to draw map of county
+          .defer(d3.csv, "Income_by_Location.csv")//income data
+          .await(ready);
+
+    }
+    
+    //county is variable that holds county.json file
+    //income is variable to hold income data file
+    function ready(error, county, income) {
+      var incomeByTract = {};
+      income.forEach(d=>{
+        var tract = d["Geography"].split(',');
+        tract = tract[0]+", "+d["Year"];
+        tract_num = tract.split(' ')[2];
+        tract_num = tract_num.split(',')[0]
+        if (+d["Household Income by Race"]>currentMax){
+            currentMax=+d["Household Income by Race"]
+        }
+        if (+d["Household Income by Race"]<currentMin){
+            currentMin=+d["Household Income by Race"]
+        }
+        if(!incomeByTract[tract_num]){
+          incomeByTract[tract_num]={
+            "2018": +d["Household Income by Race"],
+        	};
+        }
+        if(d["Year"] =="2013"){
+          incomeByTract[tract_num]["2013"]= +d["Household Income by Race"]
+        }else if(d["Year"] =="2014"){
+        	incomeByTract[tract_num]["2014"]= +d["Household Income by Race"]
+          }else if(d["Year"] =="2015"){
+        	incomeByTract[tract_num]["2015"]= +d["Household Income by Race"]
+          }else if(d["Year"] =="2016"){
+        	incomeByTract[tract_num]["2016"]= +d["Household Income by Race"]
+          }
+        	else if(d["Year"] =="2017"){
+        	incomeByTract[tract_num]["2017"]= +d["Household Income by Race"]
+          }
+      });
+
+
+
+      //define color domain
+      colors.domain([currentMin, currentMax]);
+      var i;
+      tempYear = currentYear
+      for (i = 0; i < years.length; i++) {
+        county.features.forEach(d => {
+          if(incomeByTract[d.properties["NAME20"]]){
+            d[years[tempYear].toString()] = incomeByTract[d.properties["NAME20"]][years[tempYear].toString()];
+            }
+        });
+        tempYear += 1
+      }
+      
+          
+
+      county.features.forEach(d => {
+          if(incomeByTract[d.properties["NAME20"]]){
+            d[years[currentYear].toString()] = incomeByTract[d.properties["NAME20"]][years[currentYear].toString()];
+            
+            }
+      });
+          
+      d3.select('#clock').html(years[currentYear]);  // populate the clock initially with the current year
+      svg.append("g")
+          .attr("class", "tract")
+        .selectAll("path")
+          .data(county.features)
+        .enter().append("path")
+          .attr("d", path)
+          .style("fill", d => d[years[currentYear].toString()] ? colors(d[years[currentYear].toString()]) : "grey")
+          .style('stroke', 'black')
+          .style('stroke-width', 1)
+            .on('mouseover',function(d){
+              tip.show(d);
+              d3.select(this)
+                .style("stroke-width",2)
+                .raise();
+            })
+            .on('mouseout', function(d){
+              tip.hide(d);
+              d3.select(this)
+                .style("stroke-width",1);
+            });
+    
+    function sequenceMap() {
+        var dataRange = getDataRange(); // get the min/max values from the current year's range of data values
+        //define color domain
+        colors.domain([currentMin, currentMax]);
+        d3.select('#clock').html(years[currentYear]);
+        ps=d3.selectAll("path")
+        ps.transition()  //select all the countries and prepare for a transition to new values
+          .duration(750)  // give it a smooth time period for the transition
+          .style("fill", d=> d[years[currentYear].toString()] ? colors(d[years[currentYear].toString()]) : "grey")
+          .style('stroke', 'black')
+          .style('stroke-width', 1)
+        ps.on('mouseover',function(d){
+            
+            d3.select(this)
+                .transition()
+                .duration(750)
+            tip.show(d)
+            d3.select(this)
+                .style("stroke-width",2.5)
+                .raise();
+            })
+            .on('mouseout', function(d){
+              tip.hide(d);
+              d3.select(this)
+                .style("stroke-width",1);
+            });
+	}
+	
+  
+    function getColor(valueIn, valuesIn) {
+       
+        var colors = d3.scaleQuantize() // create a linear scale
+          .domain([valuesIn[0],valuesIn[1]])  // input uses min and max values
+          .range(['#fff7ec','#fee8c8','#fdd49e','#fdbb84','#fc8d59','#ef6548','#d7301f','#b30000','#7f0000']);   // output for opacity between .3 and 1 %
+    
+        return colors(valueIn);  // return that number to the caller
+     }
+    
+    function getDataRange() {
+      // function loops through all the data values from the current data attribute
+      // and returns the min and max values
+
+      var min = Infinity, max = -Infinity;  
+      d3.selectAll("path")
+        .each(function(d,i) {
+          //console.log (d[years[+currentYear].toString()]);
+           var currentValue = d[years[+currentYear].toString()];
+           if(currentValue <= min && currentValue != -99 && currentValue != 'undefined') {
+             min = currentValue;
+           }
+          if(currentValue >= max && currentValue != -99 && currentValue != 'undefined') {
+            max = currentValue;
+          }
+      });
+     return [min,max];  
+    }
+    animateMap()
+    function animateMap() {
+      var timer;  // create timer object
+      d3.select('#play')  
+        .on('click', function() {  // when user clicks the play button
+          if(playing == false) {  // if the map is currently playing
+            timer = setInterval(function(){   // set a JS interval
+              if(currentYear < years.length-1) {  
+                  currentYear +=1;  // increment the current attribute counter
+              } else {
+                  currentYear = 0;  // or reset it to zero
+              }
+              d3.select("select").selectAll(".default").property("selected","None")
+              sequenceMap();  // update the representation of the map 
+              d3.select('#clock').html(years[currentYear]);  // update the clock
+            }, 2000);
+          
+            d3.select(this).html('Pause');  // change the button label to stop
+            playing = true;   // change the status of the animation
+          } else {    // else if is currently playing
+            
+            clearInterval(timer);   // stop the animation by clearing the interval
+            d3.select(this).html('Play');   // change the button label to play
+            playing = false;   // change the status again
+          }
+      });
+    }
+    
+    // Handler for dropdown value change
+    var dropdownChange = function() {
+        currentYear = d3.select(this).property('value')-2013,
+        sequenceMap();
+    };
+    var dropdown = d3.select("select")
+        .on("change", dropdownChange);
+    
+    dropdown.selectAll("option")
+        .data(years)
+        .enter().append("option")
+            .attr("value", function (d) { return d; })
+            .text(function (d) {
+                return d;
+            });
+    dropdown.append("option").attr("class", "default").attr("value", "None").property("selected", "None").text("Year")
+
+          
+    }
+    window.onload = init();
+   
+
+</script>
+</body>
+</html>

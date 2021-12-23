@@ -1,0 +1,126 @@
+[
+  {  
+    "key":"Mecklenburg County",
+    "values":[  
+      {  
+        "ed_level":"Less than 9th grade",
+        "geo_area":"Mecklenburg County",
+        "value":0.047
+      },
+      {  
+        "ed_level":"9th to 12th grade, no diploma",
+        "geo_area":"Mecklenburg County",
+        "value":0.075
+      },
+      {  
+        "ed_level":"High school graduate (includes equivalency)",
+        "geo_area":"Mecklenburg County",
+        "value":0.202
+      },
+      {  
+        "ed_level":"Some college, no degree",
+        "geo_area":"Mecklenburg County",
+        "value":0.210
+      },
+      {  
+        "ed_level":"Associate's degree",
+        "geo_area":"Mecklenburg County",
+        "value":0.073
+      },
+      {  
+        "ed_level":"Bachelor's degree",
+        "geo_area":"Mecklenburg County",
+        "value":0.265
+      },
+      {  
+        "ed_level":"Graduate or professional degree",
+        "geo_area":"Mecklenburg County",
+        "value":0.128
+      }
+    ]
+  },
+
+  {  
+    "key":"North Carolina",
+    "values":[  
+      {  
+        "ed_level":"Less than 9th grade",
+        "geo_area":"North Carolina",
+        "value":0.056
+      },
+      {  
+        "ed_level":"9th to 12th grade, no diploma",
+        "geo_area":"North Carolina",
+        "value":0.096
+      },
+      {  
+        "ed_level":"High school graduate (includes equivalency)",
+        "geo_area":"North Carolina",
+        "value":0.277
+      },
+      {  
+        "ed_level":"Some college, no degree",
+        "geo_area":"North Carolina",
+        "value":0.270
+      },
+      {  
+        "ed_level":"Associate's degree",
+        "geo_area":"North Carolina",
+        "value":0.086
+      },
+      {  
+        "ed_level":"Bachelor's degree",
+        "geo_area":"North Carolina",
+        "value":0.178
+      },
+      {  
+        "ed_level":"Graduate or professional degree",
+        "geo_area":"North Carolina",
+        "value":0.087
+      }
+    ]
+  },
+
+  {  
+    "key":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+    "values":[  
+      {  
+        "ed_level":"Less than 9th grade",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.049
+      },
+      {  
+        "ed_level":"9th to 12th grade, no diploma",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.088
+      },
+      {  
+        "ed_level":"High school graduate (includes equivalency)",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.244
+      },
+      {  
+        "ed_level":"Some college, no degree",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.218
+      },
+      {  
+        "ed_level":"Associate's degree",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.079
+      },
+      {  
+        "ed_level":"Bachelor's degree",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.221
+      },
+      {  
+        "ed_level":"Graduate or professional degree",
+        "geo_area":"Charlotte-Gastonia-Rock Hill, NC-SC Metro Area",
+        "value":0.101
+      }
+    ]
+  }
+
+
+]

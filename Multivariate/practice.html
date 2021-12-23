@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<link rel = "stylesheet" href="../project_style.css">
+<title>Marimekko Chart</title>
+
+<body>
+    <header>
+		<div class="container">
+		  <nav>
+			<div class="nav-brand"></div>
+			<div class="burger-menu-icon">
+			  <div class="line1"></div>
+			  <div class="menu">Menu</div>
+			  <div class="line3"></div>
+			</div>
+			 <ul class="nav-list">
+                 <li class="nav-item">
+                  <a href="https://csc362project.officetutoringhwhelp.com/" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item" style="list-style: none">
+                  <a href="https://csc362project.officetutoringhwhelp.com/Diverging%20Bar/diverge.html" class="nav-link">1. Demographic Changes</a>
+                </li>
+                <li class="nav-item" style="list-style: none">
+                  <a href="https://csc362project.officetutoringhwhelp.com/Bar%20Chart/barchart.html" class="nav-link">2. Property Value & Income</a>
+                </li>
+                <li class="nav-item" style="list-style: none">
+                  <a href="https://csc362project.officetutoringhwhelp.com/Line%20Graph/project_time_series.html" class="nav-link">3. Wealth Distribution</a>
+                </li>
+                <li class="nav-item" style="list-style: none">
+                  <a href="https://csc362project.officetutoringhwhelp.com/radar/radar.html" class="nav-link">4. Education Patterns</a>
+                </li>
+                <li class="nav-item" style="list-style: none">
+                          <a href="https://csc362project.officetutoringhwhelp.com/Choropleth/choropleth2.html" class="nav-link">5. Map of Income Change</a>
+                </li> 
+              </ul>
+		  </nav>
+		</div>
+	</header>
+<script src="../main.js"></script>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="//d3js.org/topojson.v1.min.js"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script src="https://d3js.org/d3-scale.v3.min.js"></script>
+<script src = "https://d3js.org/d3-axis.v1.min.js"></script>
+<script src="https://d3js.org/d3.v4.0.0-alpha.44.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3-tip/0.7.1/d3-tip.min.js"></script>
+
+<script>
+ d3.select("body").append("h1").attr("class","visTitle")
+    .text("6. Increasing Poverty Affects Decisions to Stay in Mecklenburg County")
+    .attr("align","center")
+
+d3.select("body").append("h3").attr("class", "visSubtitle")
+    .text("Question")
+d3.select("body").append("p").attr("class","visCont")
+    .text("This visualization aims to answer the questions : how are racial demographics shifting in Mecklenburg County over time? Are these shifts related to poverty rate? In our previous visualizations we explored changes in household income in Mecklenburg county over time. We observed that in many places in Mecklenburg County that overall the income level is rising. Here, our goal was to explore if that increase in income was evenly distributed across all groups residents or if trends of gentrification are present.") 
+    
+    
+d3.select("body").append("h3").attr("class", "visSubtitle")
+    .text("Data")
+d3.select("body").append("p").attr("class","visCont")
+    .text("In order to answer this question we use population data about Mecklenburg county from Data.io. We started with 2 different data sets. One data set contained information about race and ethnicity of the Mecklenburg population from 2013 - 2018. This dataset had a variable Ethnicity whose values were Not Hispanic or Latino and Hispanic or Latino. This variable was not contained in the other data set were working with, Poverty by Race and Ethnicity. Because of this we had to manually combine values in the first dataset so that they would map directly to values in the second dataset. Once both dataset contained cumulative population values, we sorted the datasets by the ID Race variable and by year within each race. Once both datasets contained observations in the same order we were more easily able to combine the population variable from each. Our final dataset contained 6 variables: ID Race, Race, year, poverty_pop, total_pop, and non_pov_pop. The non_pov_pop was calculated as the difference between the total_pop and poverty_pop variables.")
+
+</script>
+<div class="marimekko-container"></div>
+<script>
+var tip = d3.tip()
+        .attr('class', 'map-tip')
+        .offset([-10, 0])
+        .html(function(d) {
+            if (d.pov==1){
+                return "<span class='details'>" +
+            d.race + " in Poverty: " + n(d.value) + "<br></span>";
+            }else{
+                return "<span class='details'>" +
+            d.race + " not in Poverty: " + n(d.value) + "<br></span>";
+            }
+            
+        })
+var total_width = 1000,
+    vis_width = 800
+    height = 600,
+    margin = 40;
+
+var x = d3.scale.linear()
+    .range([0, vis_width - 3 * margin]);
+
+var y = d3.scale.linear()
+    .domain([0, 1])
+    .range([0,height - 2 * margin]);
+
+
+// set colors
+function color (race) {
+    var barColor;
+    if (race == "Asian"){
+        barColor =  '#E76F51'
+    }
+    else if (race == "White"){
+        barColor = '#264653'
+    }
+    else if (race == "Black"){
+        barColor = '#c7282d'
+    }
+    else if (race == "Other"){
+        barColor = '#32704b'
+    }
+    else if (race == "Two or More"){
+        barColor = '#d19af5'
+    }
+    else if (race == "Hispanic"){
+        barColor = '#2A9D8F'
+    }
+    else {
+        barColor = '#4263f5'    
+    }
+
+    return barColor
+}
+
+var n = d3.format(",d"),
+    p = d3.format(".1%");
+
+var svg = d3.select(".marimekko-container").append("svg")
+    .attr("width", total_width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + 4 * margin + "," + margin + ")");
+
+//call the tool tip
+svg.call(tip);
+d3.csv("marimekko_data.csv", function(error, data) {
+  if (error) throw error;
+
+  var offset = 0;
+
+  // Nest values by year. We assume each year+race is unique.
+  var years = d3.nest()
+      .key(function(d) { return d.year; })
+      .entries(data);
+  // Compute the total sum, the per-year sum, and the per-race offset.
+  // reduceRight to reverse the ordering.
+  // We also record a reference to the parent year for each race.
+  var sum = years.reduce(function(v, p) {
+      
+    return (p.offset = v) + (p.sum = p.values.reduceRight(function(v, d) {
+    //   console.log(p.offset)
+    //   console.log(v)
+      d.parent = p;
+      return (d.offset = v) + +d.value;
+    }, 0));
+  }, 0);
+
+    years_2 = ["2013", "2014", "2015", "2016", "2017", "2018"]
+    var linearScale = d3.scaleLinear()
+      .domain([0, 6])
+      .range([120, vis_width]);
+
+    d3.select('g')
+      .selectAll('text')
+      .data(years_2)
+      .enter()
+      .append('text')
+      .attr('x', function(d, i) {
+          console.log(i)
+        return linearScale(i)-80;
+      })
+      .attr('y', height - 65)
+      .text(function(d) {
+        return d;
+      })
+      .style('fill', "black");
+// // //   // Add Y axis
+//     yAxis = svg.append("g")
+//      .call(d3.axisLeft(y))
+//      .attr("class","y")
+//      .append("text")
+//       .attr("x", -8)
+//       .attr("text-anchor", "end")
+//       .attr("dy", ".35em")
+//       .text(p);
+    
+    // yAxis = svg.append("g")
+    //   .attr("id", "y-axis")
+    //   .data(y.ticks(10))
+    //   .enter().append("g")
+    //   .attr("class", "y")
+    //     .attr("transform", function(d) { return "translate(0," + y(1 - d) + ")"; });
+    //make_axis(10)
+        // console.log("attempting update")
+        // console.log(y.domain())
+        // Add y-axis ticks.
+    var ytick = svg.selectAll(".y")
+        .data(y.ticks(10))
+      .enter().append("g")
+        .attr("class", "y")
+        .attr("transform", function(d) { d.parent = 0 
+        // console.log(d)
+        return "translate(0," + y(1 - d) + ")"; });
+    // console.log(p)
+    yTicks = ytick.append("line")
+      .attr("x1", -6)
+      .style("stroke", "#000");
+
+    ytick.append("text")
+      .attr("x", -8)
+      .attr("text-anchor", "end")
+      .attr("dy", ".35em")
+      .text(p);
+    
+    
+
+  // Add a group for each year.
+  var yearsAxis = svg.selectAll(".year")
+      .data(years)
+    .enter().append("g")
+      .attr("class", "year")
+      .attr("transform", function(d) { return "translate(" + x(d.offset / sum) + ")"; });
+
+  // Add a rect for each race.
+  var races = yearsAxis.selectAll(".race")
+      .data(function(d) { 
+        //   console.log(d)
+      return d.values; })
+    .enter().append("a")
+      .attr("class", "race")
+    .append("rect").attr("class", "rect-mari")
+      .on("mouseover", onMouseOver) //Add listener for the mouseover event
+      .on("mouseout", onMouseOut)   //Add listener for the mouseout event
+      .attr("y", function(d) { return y(d.offset / d.parent.sum); })
+      .attr("height", function(d) {
+          return y(d.value / d.parent.sum); })
+      .attr("width", function(d) { return x(d.parent.sum / sum); })
+      .attr("fill-opacity", function(d) { if (d.pov == 1) { return '.95'} else {return '.45'} })
+      .style("fill", function(d) { return color(d.race ); })
+      .style("stroke", function(d) { return color(d.race ); });
+    //  console.log(y.domain())
+      
+        //mouseover event handler function
+    function onMouseOver(d, i) {
+        tip.show(d);
+      //   console.log("d is", d)
+        d3.select(this)
+          .transition()     // adds animation
+          .duration(400)
+          .style("stroke-width", 3)
+    }
+    
+    //mouseout event handler function
+    function onMouseOut(d, i) {
+        tip.hide(d);
+        // use the text label class to remove label on mouseout
+        d3.select(this)
+          .transition()     // adds animation
+          .duration(400)
+          .style("stroke-width", 1)
+        d3.selectAll('.label')
+          .remove()
+    }
+
+    var legendBox = 120;
+    races_2 = ["White", "Black", "Hispanic", "Asian", "Two or More", "Other"];
+    
+    var legend = svg.selectAll(".legend")
+      .data(races_2)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", (d,i) => 
+            "translate (-350," + i * 20 + ")")
+      
+      // draw a rect for each county color
+      legend.append("rect").attr("class", "leg-rect")
+        .attr("x", total_width + 70)
+        .attr ("y", 0)
+        .attr ("rx", 5)
+        .attr ("width", legendBox)
+        .attr("height", 20)
+        .style ("fill", function(d){ 
+          return color(d)})
+        .attr("id", "not-clicked")
+        .on("click", function(d){
+            if (this.id=="not-clicked"){
+                // console.log(d)
+                transition_axis(d)
+                d3.select(this).attr("id","clicked")
+                legRects = d3.selectAll(".leg-rect")
+                rectCol=d3.select(this).style("fill")
+                // console.log(rectCol)
+                ticks = d3.selectAll(".y")
+                rects = d3.selectAll(".rect-mari")
+                //first select all legend parts that weren't clicked and update their id's to  be not-clicked
+                legRects.filter(function(){
+                    currID=d3.select(this).attr("id")
+                    col=d3.select(this).style("fill")
+                    if (currID=="clicked" && col != rectCol){
+                        // console.log(col)
+                        return true;
+                    } //select all bars for dimming and make their ID not-clicked
+                    else{
+                        return false
+                    }
+                }).attr("id", "not-clicked")
+
+                rects.filter(function(){
+                    col=d3.select(this).style("fill")
+                    return col == rectCol// Use a filter to select all bars to have normal opacity
+                })
+                    .transition()
+                    .duration(400)
+                    .attr("fill-opacity", function(d) { if (d.pov == 1) { return '.95'} else {return '.45'} })
+                    .style("opacity", 1);
+                    
+                rects.filter(function() {
+                    col=d3.select(this).style("fill")
+                    return col != rectCol// Use a filter to make sure correct bars are dimmed
+                })
+                    .transition()
+                    .duration(400)
+                    .style("opacity",0.1)
+                
+            }else{
+                // y.transition().domain([0, 0.5])
+                d3.select(this).attr("id","not-clicked")
+                rects = d3.selectAll(".rect-mari")
+                rects.transition()
+                    .duration(400)
+                    .attr("fill-opacity", function(d) { if (d.pov == 1) {
+                        // console.log("fuller fill")
+                    return '.95'} else {return '.45'} })
+                    .style("opacity", 1)
+                    .style("fill", function(d) { return color(d.race ); })
+                    .style("stroke", function(d) { return color(d.race ); });
+                    
+            }
+          });
+      function transition_axis(d) {
+        var max = 0
+        allRects = d3.selectAll(".rect-mari")
+        // console.log(allRects)
+        currentColor = d3.color(color(d))
+        toRemove = allRects.filter(function(){
+            colorThis = d3.color(d3.select(this).style("fill"))
+            return colorThis.r != currentColor.r
+        }).attr("y", height)
+        filtered = allRects.filter(function(){
+            colorThis = d3.color(d3.select(this).style("fill"))
+            return colorThis.r == currentColor.r
+        })
+        array = filtered["_groups"][0]
+        console.log(array)
+        currpov = 0
+        currNonPov = 0
+        // array.slice().reverse().forEach(x => console.log(x))
+        array.slice().reverse().forEach(function(d){
+            // console.log(d)
+            if (color(d)){
+                currHeight = d3.select(d).attr("height")
+                console.log(d3.select(d).attr("x"))
+                opac = d3.select(d).attr("fill-opacity")
+                if (currHeight<5){
+                    newCurrHeight = currHeight *10
+                    d3.select(d).attr("height", newCurrHeight)
+                }else{
+                   newCurrHeight = currHeight *2
+                   d3.select(d).attr("height", newCurrHeight)
+                }
+                if (opac == 0.45){
+                    d3.select(d).attr("y", height-80-newCurrHeight)
+                    currNonPov = height-80-newCurrHeight
+                }
+                else{
+                    d3.select(d).remove()
+                //    .attr("y", currNonPov-newCurrHeight)
+                    currpov = newCurrHeight
+                }
+                
+                
+            //     console.log(d)
+            //     if (currHeight<50){
+            //         d3.select(d).attr("height", 8*currHeight)
+            //     }
+                
+            //     if (d.height.baseVal.value>max){
+            //         max = d.height.baseVal.value
+            // }
+        }})
+        // console.log(max)
+
+          // Alternate between 10 and 50 for yMax
+        //   yMax = 0.5
+        //d.parent = 0
+        //   // Update scale domain
+        //   y.domain([0, yMax]);
+          svg.selectAll(".y").remove()
+          // Grab y axis g element
+          var axisEl = svg.selectAll(".y");
+          // Update the axis
+          update_graph(5);
+          
+        }
+    function update_graph(num, race){
+         sum = years.reduceRight(function(v, par) {
+      
+            return (par.offset = v) + (par.sum = par.values.reduceRight(function(v, d) {
+            //   console.log(p.offset)
+            //   console.log(v)
+              d.parent = par;
+              return (d.offset = v) + +d.value;
+            }, 0));
+          }, 0);
+          
+        // console.log("attempting update")
+        // console.log(y.domain())
+        // Add y-axis ticks.
+         ytick = svg.selectAll(".y")
+            .data(y.ticks(num))
+          .enter().append("g")
+            .attr("class", "y")
+            .attr("transform", function(d) { d.parent = 0 
+            return "translate(0," + y(1 - d) + ")"; });
+        // console.log(p)
+        yTicks = ytick.append("line")
+          .attr("x1", -6)
+          .style("stroke", "#000");
+    
+        ytick.append("text")
+          .attr("x", -8)
+          .attr("text-anchor", "end")
+          .attr("dy", ".35em")
+          .text(p);
+    }
+              
+      //add legend text
+      legend.append("text")
+        .attr("x", total_width + 70 + legendBox/2)
+        .attr ("y", 9)
+        .attr ("dy", ".35em")
+        .attr("text-anchor", "middle")
+        .style("pointer-events", "none")
+        .style ("fill", "#ffffff")
+        .text(function(d){
+          return d});
+
+      //adding graph title
+      svg.append("text")
+        .attr("x", (total_width / 3))
+        .attr("y", -5)
+        .attr("text-anchor", "middle")
+        .attr("class", "graph-title")
+        .style("text-decoration", "underline")
+        .style("fill","#202742")
+        .text("Mecklenburg Racial Demographics from 2013-18");
+
+
+// var height = 300,
+//     width = 100,
+//     margin = 20,
+//     yMax = 10;
+
+
+// var yScale = d3.scale.linear()
+//   .range([height - margin, margin])
+//   .domain([0, yMax]);
+
+// var yAxis = d3.svg.axis()
+//   .orient("left")
+//   .scale(yScale)
+//   .innerTickSize(3)
+//   .outerTickSize(0);
+
+
+// svg.append("g")
+//   .attr("id", "y-axis")
+//   .attr("transform", "translate(" + width/2 + ",0)")
+//   .call(yAxis);
+
+
+
+
+
+
+// // Set up button click handler
+
+// d3.select("#transition-axis").on("click", transition_axis);
+
+    
+});
+
+d3.select("body").append("h3").attr("class", "visSubtitle")
+    .text("Analysis")
+d3.select("body").append("p").attr("class","visCont")
+    .text("Although the change is extremely gradual, we do see the demographic shift in Mecklenburg County from 2013 - 2018. The graphic shows that with each year, the population of white individuals increases. In addition, it appears that the percentage of white individuals living in poverty decreases. It is also interesting to note that the Hispanic population not living in poverty grows. The graphic also shows that the Black population has the highest percentage of poverty in Mecklenburg county over the six years shown and that the Black population decreases more than any other race.  A characteristic of gentrification is that it happens almost seemlessly, over years of subtle change. We see that reflected in the graph below. Note that this visualization shows year over year change over a period of only 6 years. Although the change appears slight, maybe even insignificant, it is important to consider the trends and their impacts if continued over a greater span of time.")
+
+
+</script>
